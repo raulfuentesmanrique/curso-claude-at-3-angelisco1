@@ -17,6 +17,7 @@ Terminología del dominio y conceptos técnicos utilizados en el proyecto Restte
 | **DishIngredient** | Relación entre un plato y un ingrediente, con la cantidad necesaria. |
 | **Order** | Pedido realizado por un cliente. Contiene ítems (platos) y está asociado a un restaurante. |
 | **OrderItem** | Línea de un pedido: un plato con cantidad, notas opcionales y estado. |
+| **Table (Mesa)** | Mesa de un restaurante. Tiene número (único en el restaurante), descripción opcional, capacidad (nº máximo de comensales) y estado. Un pedido puede asociarse a una mesa mediante `tableId`. Se guarda en la tabla `restaurant_tables`. |
 
 Dos particularidades del modelo que conviene tener presentes:
 
@@ -43,6 +44,16 @@ El valor almacenado es `manager`; "gerente" es solo su traducción en la interfa
 | **preparando** | Ítem siendo preparado en cocina. | cocinero |
 | **listo** | Ítem preparado, listo para servir. | cocinero |
 | **entregado** | Ítem entregado al cliente. Desaparece de las vistas activas. | camarero |
+
+### Estados de Mesa
+
+| Estado | Descripción | Quién lo cambia |
+| --- | --- | --- |
+| **libre** | Mesa disponible. Es la única que puede elegir un cliente y la única que se puede borrar. | — (estado inicial) / empleados o admin al liberarla |
+| **ocupada** | Mesa con comensales. | cliente (al elegirla, `POST .../occupy`) o empleados/admin |
+| **reservada** | Mesa apartada; no aparece como disponible para los clientes. No hay flujo de reservas con fecha. | empleados o admin |
+
+Los valores los valida `normalizeTableStatus()` (trim + minúsculas, `InvalidTableStatusError` si no es válido). La mesa no se libera sola al entregar el pedido: la liberan los empleados.
 
 ### Categorías de Platos
 
@@ -89,17 +100,17 @@ Las tres capas aplican al contexto `employee`:
 | **Application** | Casos de uso. Orquesta la lógica de negocio. |
 | **Infrastructure** | Implementaciones concretas: BD, HTTP, servicios externos. |
 
-En `restaurant`, `dish`, `ingredient` y `order` la separación equivalente es por carpetas: `models/`, `repositories/`, `services/`, `controllers/` y `routes/`.
+En `restaurant`, `dish`, `ingredient`, `order` y `table` la separación equivalente es por carpetas: `models/`, `repositories/`, `services/`, `controllers/` y `routes/`.
 
 ### Patrones
 
 | Patrón | Descripción | Ejemplo en Resttek |
 | --- | --- | --- |
-| **Entity** | Objeto con identidad única y comportamiento propio. | `Employee` (la única). `Restaurant`, `Dish`, `Ingredient` y `Order` son `interface` planas |
+| **Entity** | Objeto con identidad única y comportamiento propio. | `Employee` (la única). `Restaurant`, `Dish`, `Ingredient`, `Order` y `Table` son `interface` planas |
 | **Value Object** | Objeto inmutable definido por su valor. | `Email`, `Role` |
 | **Repository** | Abstracción de persistencia. | `IEmployeeRepository`, `RestaurantRepository` |
 | **Use Case** | Acción de negocio específica, una clase con `execute()`. | `LoginUseCase`, `CreateEmployeeUseCase`, `RegisterClientUseCase` |
-| **Service** | Equivalente al caso de uso fuera de `employee`: una clase con varios métodos. | `RestaurantService`, `DishService`, `OrderService` |
+| **Service** | Equivalente al caso de uso fuera de `employee`: una clase con varios métodos. | `RestaurantService`, `DishService`, `OrderService`, `TableService` |
 | **DTO** | Objeto para transferir datos entre capas. | `CreateRestaurantDTO`, `LoginDTO` |
 | **Factory Method** | Método estático para crear instancias con validación. | `Employee.create()` |
 | **Store** | Servicio Angular que guarda estado con signals. | `AuthStore`, `DishStore`, `CartStore` |

@@ -51,7 +51,7 @@ contexts/employee/
 
 `contexts/shared/` no es un bounded context de negocio: contiene el value object `Email` y los middlewares y el `errorHandler` de Express.
 
-### 2. Por capas → `restaurant`, `dish`, `ingredient`, `order`
+### 2. Por capas → `restaurant`, `dish`, `ingredient`, `order`, `table`
 
 El resto de dominios **no** usan bounded contexts. Se organizan en carpetas transversales por tipo de fichero:
 
@@ -310,6 +310,21 @@ Todos cuelgan de `/api/v1`. La columna **Roles** indica qué valores de `req.use
 
 Los ingredientes son **más restrictivos** que los platos: solo `admin` puede crear, editar o borrar.
 
+### Mesas
+
+| Método | Ruta | Roles |
+| --- | --- | --- |
+| `GET` | `/api/v1/restaurants/:restaurantId/tables` | admin, manager, camarero, cocinero |
+| `GET` | `/api/v1/restaurants/:restaurantId/tables/available?people=N` | cliente, admin, manager, camarero, cocinero |
+| `GET` | `/api/v1/restaurants/:restaurantId/tables/:id` | admin, manager, camarero, cocinero |
+| `POST` | `/api/v1/restaurants/:restaurantId/tables` | admin |
+| `PUT` | `/api/v1/restaurants/:restaurantId/tables/:id` | admin |
+| `DELETE` | `/api/v1/restaurants/:restaurantId/tables/:id` | admin — solo si la mesa está `libre` (409 si no) |
+| `PATCH` | `/api/v1/restaurants/:restaurantId/tables/:id/status` | admin, manager, camarero, cocinero |
+| `POST` | `/api/v1/restaurants/:restaurantId/tables/:id/occupy` | cliente — atómico, 409 si ya no está `libre` |
+
+`/available` se declara antes de `/:id` en el router. Una mesa de otro restaurante distinto al de la ruta se trata como inexistente (404). El contrato detallado está en `docs/api/openapi.yml`.
+
 ### Pedidos
 
 | Método | Ruta | Roles |
@@ -345,7 +360,8 @@ Ambos responden directamente, sin pasar por el `errorHandler`.
 
 Jerarquía: `Error` → `AppError` (abstracta) → errores específicos en `errors/DomainErrors.ts`. `AppError` asigna `this.name = this.constructor.name`, y el `errorHandler` decide el código HTTP a partir de ese nombre:
 
-- **404**: `EmployeeNotFoundError`, `RestaurantNotFoundError`, `IngredientNotFoundError`, `DishNotFoundError`
+- **404**: `EmployeeNotFoundError`, `RestaurantNotFoundError`, `IngredientNotFoundError`, `DishNotFoundError`, `TableNotFoundError`
+- **409**: `DuplicatedTableNumberError`, `TableNotAvailableError`
 - **401**: `InvalidCredentialsError`
 - **400**: cualquier otro `AppError`
 - **500**: errores no controlados
@@ -400,6 +416,6 @@ La ruta del fichero se decide en el constructor: `:memory:` si `NODE_ENV=test`, 
 Con **Vitest** (`npm test` desde la raíz, o `npm run test:watch` dentro de `packages/api`). Los tests son unitarios y conviven con el código que prueban:
 
 - Dominio y casos de uso de `employee`, con dobles en `contexts/employee/application/mocks/`
-- Servicios y repositorios de `restaurant`, `ingredient` y `order`, con dobles en `repositories/mocks/`
+- Servicios y repositorios de `restaurant`, `ingredient`, `order` y `table`, con dobles en `repositories/mocks/`
 
-**No hay tests de integración HTTP.** `supertest` figura como dependencia de desarrollo pero no se usa en ningún test, así que las rutas, los middlewares y el `errorHandler` no están cubiertos.
+**No hay tests de integración HTTP.** `supertest` figura como dependencia de desarrollo pero no se usa en ningún test, así que las rutas y los middlewares no están cubiertos. El `errorHandler` tiene un test unitario del mapeo de códigos (`errorHandler.test.ts`).

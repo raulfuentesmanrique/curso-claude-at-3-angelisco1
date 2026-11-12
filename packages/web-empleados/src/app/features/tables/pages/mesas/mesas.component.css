@@ -1,0 +1,40 @@
+.page-header { margin-bottom: 24px; }
+.page-header h1 { font-size: 24px; font-weight: 600; color: var(--text-primary); }
+
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.table-card.status-libre { border-left: 4px solid var(--green-light); }
+.table-card.status-ocupada { border-left: 4px solid var(--orange); }
+.table-card.status-reservada { border-left: 4px solid var(--yellow); }
+
+.table-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.table-number { display: block; font-weight: 600; color: var(--text-primary); }
+.table-capacity, .table-description, .no-orders { font-size: 12px; color: var(--text-muted); }
+
+.status-select { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+.status-select select { text-transform: capitalize; }
+
+.table-orders { border-top: 1px solid var(--border-color); padding-top: 12px; }
+.table-orders h3 { font-size: 13px; margin-bottom: 8px; color: var(--text-primary); }
+.order-block { margin-bottom: 8px; }
+.order-id { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.order-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px; color: var(--text-primary); }
+
+.badge { display: inline-flex; padding: 3px 10px; font-size: 11px; font-weight: 500; border-radius: 20px; text-transform: capitalize; }
+.badge-libre, .badge-listo { background: var(--green-glow); color: var(--green-light); }
+.badge-ocupada, .badge-preparando { background: var(--orange-glow); color: var(--orange); }
+.badge-reservada, .badge-pendiente { background: var(--yellow-glow); color: var(--yellow); }
+.badge-entregado { background: rgba(139, 146, 168, 0.1); color: var(--text-muted); }
