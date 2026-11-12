@@ -21,9 +21,15 @@ export interface CartItem {
 export class CartStore {
   private readonly _items = signal<CartItem[]>([])
   private readonly _restaurantId = signal<string | null>(null)
+  private readonly _tableId = signal<string | null>(null)
+  private readonly _tableNumber = signal<number | null>(null)
+  private readonly _tableRestaurantId = signal<string | null>(null)
 
   readonly items = this._items.asReadonly()
   readonly restaurantId = this._restaurantId.asReadonly()
+  readonly tableId = this._tableId.asReadonly()
+  readonly tableNumber = this._tableNumber.asReadonly()
+  readonly tableRestaurantId = this._tableRestaurantId.asReadonly()
 
   readonly total = computed(() =>
     this._items().reduce((sum, item) => sum + item.dish.price * item.quantity, 0)
@@ -33,9 +39,32 @@ export class CartStore {
     this._items().reduce((count, item) => count + item.quantity, 0)
   )
 
+  selectTable(restaurantId: string, tableId: string, tableNumber: number): void {
+    if (this._restaurantId() && this._restaurantId() !== restaurantId) {
+      this._items.set([])
+      this._restaurantId.set(null)
+    }
+    this._tableRestaurantId.set(restaurantId)
+    this._tableId.set(tableId)
+    this._tableNumber.set(tableNumber)
+  }
+
+  hasTableFor(restaurantId: string): boolean {
+    return this._tableId() !== null && this._tableRestaurantId() === restaurantId
+  }
+
+  private clearTable(): void {
+    this._tableId.set(null)
+    this._tableNumber.set(null)
+    this._tableRestaurantId.set(null)
+  }
+
   addItem(dish: Dish, quantity: number = 1, notes: string = ''): void {
     if (this._restaurantId() && this._restaurantId() !== dish.restaurantId) {
       this._items.set([])
+    }
+    if (this._tableRestaurantId() && this._tableRestaurantId() !== dish.restaurantId) {
+      this.clearTable()
     }
     this._restaurantId.set(dish.restaurantId)
 
@@ -77,5 +106,6 @@ export class CartStore {
   clear(): void {
     this._items.set([])
     this._restaurantId.set(null)
+    this.clearTable()
   }
 }

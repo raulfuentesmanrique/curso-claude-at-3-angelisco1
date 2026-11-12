@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core'
-import { ActivatedRoute, RouterLink } from '@angular/router'
+import { ActivatedRoute, Router, RouterLink } from '@angular/router'
 import { DecimalPipe } from '@angular/common'
 import { LucideAngularModule } from 'lucide-angular'
 import { DishService } from '../../core/services/dish.service'
@@ -15,8 +15,11 @@ import { Restaurant } from '../../core/models/restaurant.model'
     <div class="container">
       <div class="page-header">
         <div>
-          <a routerLink="/restaurants" class="back-link">← Volver a restaurantes</a>
+          <a [routerLink]="['/restaurants', restaurantId]" class="back-link">← Cambiar de mesa</a>
           <h1>{{ restaurant()?.name || 'Cargando...' }}</h1>
+          @if (cartStore.tableNumber() !== null) {
+            <p class="table-info">Mesa {{ cartStore.tableNumber() }}</p>
+          }
         </div>
       </div>
 
@@ -93,6 +96,11 @@ import { Restaurant } from '../../core/models/restaurant.model'
       color: var(--text-muted);
       margin-bottom: 8px;
       display: inline-block;
+    }
+    .table-info {
+      color: var(--green-light);
+      font-weight: 600;
+      margin-top: 4px;
     }
     .menu-layout {
       display: grid;
@@ -211,8 +219,10 @@ export class RestaurantMenuComponent implements OnInit {
   private readonly route = inject(ActivatedRoute)
   private readonly dishService = inject(DishService)
   private readonly restaurantService = inject(RestaurantService)
+  private readonly router = inject(Router)
   readonly cartStore = inject(CartStore)
 
+  restaurantId = ''
   readonly restaurant = signal<Restaurant | null>(null)
   readonly dishes = signal<Dish[]>([])
   readonly loading = signal(true)
@@ -234,6 +244,11 @@ export class RestaurantMenuComponent implements OnInit {
 
   ngOnInit(): void {
     const restaurantId = this.route.snapshot.paramMap.get('id')!
+    this.restaurantId = restaurantId
+    if (!this.cartStore.hasTableFor(restaurantId)) {
+      this.router.navigate(['/restaurants', restaurantId])
+      return
+    }
     this.loadData(restaurantId)
   }
 

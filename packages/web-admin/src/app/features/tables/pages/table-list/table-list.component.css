@@ -1,0 +1,19 @@
+.table-number {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.status-libre {
+  color: var(--green-light);
+  font-weight: 600;
+}
+
+.status-ocupada {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.status-reservada {
+  color: var(--text-muted);
+  font-weight: 600;
+}

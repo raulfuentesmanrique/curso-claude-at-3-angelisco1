@@ -16,6 +16,10 @@ export const routes: Routes = [
       },
       {
         path: 'restaurants/:id',
+        loadComponent: () => import('./features/tables/table-selection.component').then(m => m.TableSelectionComponent)
+      },
+      {
+        path: 'restaurants/:id/menu',
         loadComponent: () => import('./features/menu/restaurant-menu.component').then(m => m.RestaurantMenuComponent)
       },
       {

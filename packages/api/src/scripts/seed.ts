@@ -9,6 +9,18 @@ const seed = async () => {
         await dbConfig.initialize()
         console.log('Database initialized.')
 
+        await dbConfig.run(`
+            INSERT OR IGNORE INTO restaurants (id, name, address, email, phone, owner_first_name, owner_last_name, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, ['rest-1', 'Restaurante El Gourmet', 'Calle Mayor 10, Madrid', 'info@gourmet.com', '912345678', 'Carlos', 'García', new Date().toISOString(), new Date().toISOString()])
+
+        await dbConfig.run(`
+            INSERT OR IGNORE INTO restaurants (id, name, address, email, phone, owner_first_name, owner_last_name, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, ['rest-2', 'Pizzería Napoli', 'Avenida del Sol 25, Barcelona', 'info@napoli.com', '934567890', 'Marco', 'Rossi', new Date().toISOString(), new Date().toISOString()])
+
+        console.log('Restaurants created.')
+
         const authService = new BcryptAuthService()
         const employeeRepo = new SqliteEmployeeRepository(dbConfig)
 
@@ -59,17 +71,26 @@ const seed = async () => {
             }
         }
 
-        await dbConfig.run(`
-            INSERT OR IGNORE INTO restaurants (id, name, address, email, phone, owner_first_name, owner_last_name, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, ['rest-1', 'Restaurante El Gourmet', 'Calle Mayor 10, Madrid', 'info@gourmet.com', '912345678', 'Carlos', 'García', new Date().toISOString(), new Date().toISOString()])
 
-        await dbConfig.run(`
-            INSERT OR IGNORE INTO restaurants (id, name, address, email, phone, owner_first_name, owner_last_name, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, ['rest-2', 'Pizzería Napoli', 'Avenida del Sol 25, Barcelona', 'info@napoli.com', '934567890', 'Marco', 'Rossi', new Date().toISOString(), new Date().toISOString()])
+        const tables = [
+            { id: 'table-1-1', restaurantId: 'rest-1', number: 1, description: 'Junto a la ventana', capacity: 2, status: 'libre' },
+            { id: 'table-1-2', restaurantId: 'rest-1', number: 2, description: null, capacity: 4, status: 'libre' },
+            { id: 'table-1-3', restaurantId: 'rest-1', number: 3, description: 'Salón principal', capacity: 4, status: 'ocupada' },
+            { id: 'table-1-4', restaurantId: 'rest-1', number: 4, description: 'Terraza', capacity: 6, status: 'libre' },
+            { id: 'table-1-5', restaurantId: 'rest-1', number: 5, description: 'Reservado del fondo', capacity: 8, status: 'reservada' },
+            { id: 'table-2-1', restaurantId: 'rest-2', number: 1, description: 'Barra', capacity: 2, status: 'libre' },
+            { id: 'table-2-2', restaurantId: 'rest-2', number: 2, description: null, capacity: 4, status: 'libre' },
+            { id: 'table-2-3', restaurantId: 'rest-2', number: 3, description: 'Terraza', capacity: 6, status: 'reservada' },
+        ]
 
-        console.log('Restaurants created.')
+        for (const table of tables) {
+            await dbConfig.run(`
+                INSERT OR IGNORE INTO restaurant_tables (id, restaurant_id, number, description, capacity, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `, [table.id, table.restaurantId, table.number, table.description, table.capacity, table.status, new Date().toISOString(), new Date().toISOString()])
+        }
+
+        console.log(`Tables created: ${tables.length} tables`)
 
         const ingredientsRest1 = [
             { id: randomUUID(), name: 'Tomate', unit: 'kg' },
@@ -162,7 +183,7 @@ const seed = async () => {
         await dbConfig.run(`
             INSERT OR IGNORE INTO orders (id, restaurant_id, table_id, client_id, created_at)
             VALUES (?, ?, ?, ?, ?)
-        `, [order1Id, 'rest-1', '5', null, new Date().toISOString()])
+        `, [order1Id, 'rest-1', 'table-1-3', null, new Date().toISOString()])
 
         for (let i = 0; i < 2; i++) {
             await dbConfig.run(`
